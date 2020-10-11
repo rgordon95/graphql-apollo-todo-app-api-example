@@ -3,12 +3,14 @@ const { ApolloServer, gql } = require('apollo-server-express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
 
+const { tasks, users } = require('./constants');
+
+// set env variables
 dotEnv.config();
 
 const app = express();
 
 // cors
-
 app.use(cors());
 
 // body parser middleware
@@ -18,6 +20,8 @@ app.use(express.json());
 const typeDefs = gql`
     type Query {
         greetings: [String!]
+        task(id: ID!): Task!
+        tasks: [Task!]
     }
 
     type User {
@@ -31,15 +35,22 @@ const typeDefs = gql`
         id: ID!
         name: String!
         completed: Boolean!
-        author: User!
+        user: User!
     }
 `;
 
 const resolvers = {
     Query: {
-        greetings: () => {
-            return "hi"
-        }
+        task: (parent, args) => {
+             return tasks.find(task => task.id === args.id )
+        },
+        tasks: () => tasks
+    },
+    Task: {
+        user: (parent) => {
+            return users.find(user => user.id === parent.userId) 
+        },
+        name: () => "test-tasj"
     }
 };
 
