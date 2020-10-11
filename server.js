@@ -17,11 +17,31 @@ app.use(express.json());
 
 const typeDefs = gql`
     type Query {
-        greetings: String
+        greetings: [String!]
+    }
+
+    type User {
+        id: ID!
+        name: String!
+        email: String!
+        tasks: [Task!]
+    }
+
+    type Task {
+        id: ID!
+        name: String!
+        completed: Boolean!
+        author: User!
     }
 `;
 
-const resolvers = {};
+const resolvers = {
+    Query: {
+        greetings: () => {
+            return "hi"
+        }
+    }
+};
 
 const apolloServer = new ApolloServer({
     typeDefs,
