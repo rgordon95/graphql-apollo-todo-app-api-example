@@ -7,6 +7,10 @@ dotEnv.config();
 
 const app = express();
 
+// cors
+
+app.use(cors());
+
 // body parser middleware
 
 app.use(express.json());
@@ -14,7 +18,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 app.use('/', (req, res, next) => {
-    res.send({ message: 'hello' })
+    res.send({ message: 'heasdallo' })
 })
 
 app.listen(PORT, () => {
