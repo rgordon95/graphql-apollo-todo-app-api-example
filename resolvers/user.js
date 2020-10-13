@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const uuid = require('uuid');
+const jwt = require('jsonwebtoken');
 const { users, tasks } = require('../constants');
 const User = require('../database/models/user');
 
@@ -19,6 +19,26 @@ Query: {
     },
 },
 Mutation: {
+    login: async (parent, { input },  ctx, info) => {
+        try {
+        const user = await User.findOne({ email: input.email })
+            if (!user) {
+                throw new Error('Sorry user not found. try signing up instead')
+            }
+
+            const isPasswordValid = await bcrypt.compare(input.password, user.password);
+
+            if (!isPasswordValid) {
+                throw new Error('Sorry. invalid password')
+            }
+            const secret = process.env.JWT_SECRET_KEY || 'fallb@ck5ecret'
+            const token = jwt.sign({ email: user.email }, secret, { expiresIn: '14 days' });
+            return { token }
+        } catch (error) {
+            console.log(error)
+            throw error;
+        }
+    },
     signUp: async (parent, { input }, ctx, info) => {
         try {
             const user = await User.findOne({ email: input.email });
