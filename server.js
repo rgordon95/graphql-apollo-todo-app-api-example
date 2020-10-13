@@ -2,10 +2,8 @@ const express = require('express');
 const { ApolloServer, gql } = require('apollo-server-express');
 const cors = require('cors');
 const dotEnv = require('dotenv');
-const uuid = require('uuid');
 
-const { tasks, users } = require('./constants');
-
+const resolvers = require('./resolvers');
 // set env variables
 dotEnv.config();
 
@@ -39,6 +37,10 @@ const typeDefs = gql`
         tasks: [Task!]
     }
 
+    extend type User {
+        address: String
+    }
+
     type Task {
         id: ID!
         name: String!
@@ -58,52 +60,6 @@ const typeDefs = gql`
         email: String!
     }
 `;
-
-const resolvers = {
-    Query: {
-        task: (parent, args, ctx, info) => {
-             return tasks.find(task => task.id === args.id)
-        },
-        tasks: () => {
-            return tasks
-        },
-        user: (parent, { id }, ctx, info) => {
-            const user = users.find(users => user.id === id)
-
-            if (!user) {
-                throw new Error('user not found');
-            }
-
-            return user;
-        },
-        users: () => {
-            return users
-        },
-    },
-    Mutation: {
-        createTask: (parent, args, ctx, info) => {
-            const task = { ...args.input, id: uuid.v4() };
-            tasks.push(task);
-            return task;
-        },
-        createUser: (parent, args, ctx, info) => {
-            const user = { ...args.input, id: uuid.v4() };
-            users.push(user);
-            return user;
-        },
-    },
-    Task: {
-        user: (parent) => {
-            return users.find(user => user.id === parent.userId) 
-        },
-        // name: () => "test-tasj"
-    },
-    User: {
-        tasks: ({ id }) => {
-            return tasks.filter(task => task.id === id);
-        }
-    }
-};
 
 const apolloServer = new ApolloServer({
     typeDefs,
