@@ -8,9 +8,11 @@
 
 ## dependencies overview
 * dotenv - for environment config
+* bcrypt - password hashing
 * cors - for security
-* apollo-server-express
-* express
+* apollo-server-express - connecting apollo graphql client with express
+* express - server
+* mongoose - data model for mongodb schemas
 * nodemon - hot reload dev environment
 
 

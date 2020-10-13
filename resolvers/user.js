@@ -1,5 +1,7 @@
+const bcrypt = require('bcryptjs');
 const uuid = require('uuid');
 const { users, tasks } = require('../constants');
+const User = require('../database/models/user');
 
 module.exports = {
 Query: {
@@ -17,10 +19,19 @@ Query: {
     },
 },
 Mutation: {
-    createUser: (parent, args, ctx, info) => {
-        const user = { ...args.input, id: uuid.v4() };
-        users.push(user);
-        return user;
+    signUp: async (parent, { input }, ctx, info) => {
+        try {
+            const user = await User.findOne({ email: input.email });
+            if (user) {
+                throw new Error('Sorry user exists. try logging in')
+            }
+            const hashedPassword = await bcrypt.hash(input.password, 12);
+            const newUser = new User({...input, password: hashedPassword})
+            const createdUser = await newUser.save();
+            return createdUser;
+        } catch (error) {
+            throw error;
+        }
     },
 },
 User: {
