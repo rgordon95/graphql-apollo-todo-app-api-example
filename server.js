@@ -6,6 +6,7 @@ const dotEnv = require('dotenv');
 const resolvers = require('./resolvers');
 const typeDefs = require('./typeDefs');
 const { connection } = require('./database/util');
+const { verifyUser } = require('./helper/context/index');
 // set env variables
 dotEnv.config();
 
@@ -17,15 +18,15 @@ connection();
 app.use(cors());
 
 // body parser middleware
-
 app.use(express.json());
 
 const apolloServer = new ApolloServer({
     typeDefs,
     resolvers,
-    context: () =>  {
+    context: async ( { req } ) =>  {
+        await verifyUser(req);
         return {
-            email: "email"
+            email: req.email
         }
     },
 });
