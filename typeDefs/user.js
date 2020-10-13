@@ -16,6 +16,8 @@ module.exports = gql`
         email: String!
         password: String!
         tasks: [Task!]
+        createdAt: String!
+        updatedAt: String!
     }
 
     extend type User {
