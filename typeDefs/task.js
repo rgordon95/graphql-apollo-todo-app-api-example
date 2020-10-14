@@ -15,6 +15,8 @@ module.exports = gql`
         name: String!
         completed: Boolean!
         user: User!
+        createdAt: Date!
+        updatedAt: Date!
     }
 
  input createTaskInput {
