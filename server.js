@@ -30,6 +30,11 @@ const apolloServer = new ApolloServer({
             loggedInUserId: req.loggedInUserId,
         }
     },
+    formatError: (error) => {
+        return {
+            message: error.message
+        }  ;
+    }
 });
 
 apolloServer.applyMiddleware({app, path: '/graphql'});
