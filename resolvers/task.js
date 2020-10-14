@@ -29,7 +29,7 @@ module.exports = {
         createTask: combineResolvers(isAuthenticated, async (parent, { input }, { email }, info) => {
          try {
             const user = await User.findOne({ email: email })
-            const task = new Task({ ...input, id: uuid.v4(), user: user.id });
+            const task = new Task({ ...input, user: user.id });
             const result = await task.save();
             user.tasks.push(result.id);
             await user.save();
@@ -39,6 +39,21 @@ module.exports = {
              throw error;
          }
         }),
+        updateTask: combineResolvers(isAuthenticated, isTaskOwner, async (parent, { id , input }, ctx, info) => {
+            try {
+                const task = await Task.findByIdAndUpdate(id, { ...input }, { new: true });
+
+                if (!task) {
+                    throw new Error('no task found');
+                }
+
+                return task;
+
+            } catch (error) {
+                console.log(error)
+                throw error;
+            }
+        })
     },
     Task: {
         user: async (parent) => {
