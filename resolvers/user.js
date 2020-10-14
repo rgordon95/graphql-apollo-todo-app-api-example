@@ -8,18 +8,18 @@ const { isAuthenticated } = require('./middleware');
 
 module.exports = {
 Query: {
-    user: (parent, { id }, ctx, info) => {
-        const user = users.find(users => user.id === id)
-
-        if (!user) {
-            throw new Error('user not found');
-        }
-
-        return user;
-    },
-    users: () => {
-        return users
-    },
+    user: combineResolvers(isAuthenticated, (parent, args, ctx, info) => {
+        const user = await User.findOne({ email });
+        try {
+            if (!user) {
+                throw new Error('user not found');
+            }
+            return user;
+        } catch (error) {
+            console.log(error)
+            throw error;
+        }    
+    }),
 },
 Mutation: {
     login: async (parent, { input },  ctx, info) => {
