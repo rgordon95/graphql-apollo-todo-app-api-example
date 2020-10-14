@@ -4,6 +4,7 @@ const Task = require('../database/models/task');
 const User = require('../database/models/user');
 const uuid = require('uuid');
 const { isAuthenticated, isTaskOwner } = require('./middleware');
+const user = require('../database/models/user');
 
 module.exports = {
     Query: {
@@ -15,9 +16,9 @@ module.exports = {
                 throw error;
              }
             }),
-        tasks: combineResolvers(isAuthenticated, async (parent, args, { loggedInUserId }, info) => {
+        tasks: combineResolvers(isAuthenticated, async (parent, { skip = 0, limit = 20 }, { loggedInUserId }, info) => {
             try {
-                const tasks = await Task.find({ user: loggedInUserId})
+                const tasks = await Task.find({ user: loggedInUserId}).sort({ _id: -1 }).skip(skip).limit(limit);
                 return tasks;
             } catch (error) {
                 console.log(error);
@@ -46,12 +47,20 @@ module.exports = {
                 if (!task) {
                     throw new Error('no task found');
                 }
-
                 return task;
-
             } catch (error) {
                 console.log(error)
                 throw error;
+            }
+        }),
+        deleteTask: combineResolvers(isAuthenticated, isTaskOwner, async (parent, { id}, { loggedInUserId }, info) => {
+            try {
+                const task = await Task.findByIdAndDelete(id);
+                await user.updateOne({_id: loggedInUserId}, {$pull: {tasks: task.id } });
+                return task;
+            } catch (error) {
+                console.log(error)
+                throw error
             }
         })
     },
