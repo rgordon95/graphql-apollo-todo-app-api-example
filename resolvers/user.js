@@ -3,12 +3,13 @@ const jwt = require('jsonwebtoken');
 const { combineResolvers } = require('graphql-resolvers');
 
 const { users, tasks } = require('../constants');
+const Task = require('../database/models/task');
 const User = require('../database/models/user');
 const { isAuthenticated } = require('./middleware');
 
 module.exports = {
 Query: {
-    user: combineResolvers(isAuthenticated, (parent, args, ctx, info) => {
+    user: combineResolvers(isAuthenticated, async (parent, args, ctx, info) => {
         const user = await User.findOne({ email });
         try {
             if (!user) {
@@ -58,8 +59,18 @@ Mutation: {
     },
 },
 User: {
-    tasks: ({ id }) => {
-        return tasks.filter(task => task.id === id);
+    tasks: async ({ id }) => {
+       try {
+        const tasks = await Task.find({ user: id });
+        
+        if (!tasks) {
+            throw new Error('Sorry no tasks were found for this user')
+        }
+
+        return tasks;
+       } catch (error) {
+           throw error;
     }
+}
 }
 }
