@@ -3,6 +3,7 @@ const Task = require('../database/models/task');
 const User = require('../database/models/user');
 const { isAuthenticated, isTaskOwner } = require('./middleware');
 const { base64ToString, stringToBase64 } = require('../helper');
+const loaders = require('../loaders');
 
 module.exports = {
     Query: {
@@ -77,9 +78,9 @@ module.exports = {
         })
     },
     Task: {
-        user: async (parent) => {
+        user: async (parent, args, { loaders }) => {
             try {
-                const user = await User.findById(parent.user);
+                const user = await loaders.user.load(parent.user.toString())
                 return user;
             } catch (error) {
                 console.log(error);
