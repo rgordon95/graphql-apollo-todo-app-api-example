@@ -1,10 +1,11 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { combineResolvers } = require('graphql-resolvers');
-
 const Task = require('../database/models/task');
 const User = require('../database/models/user');
 const { isAuthenticated } = require('./middleware');
+const PubSub = require('../subscriptions');
+const { userEvents } = require('../subscriptions/events');
 
 module.exports = {
 Query: {
@@ -51,11 +52,19 @@ Mutation: {
             const hashedPassword = await bcrypt.hash(input.password, 12);
             const newUser = new User({...input, password: hashedPassword})
             const createdUser = await newUser.save();
+            PubSub.publish(userEvents.USER_CREATED, {
+                userCreated: createdUser
+            });
             return createdUser;
         } catch (error) {
             throw error;
         }
     },
+},
+Subscription: {
+    userCreated: {
+        subscribe: () => PubSub.asyncIterator(userEvents.USER_CREATED)
+    }
 },
 User: {
     tasks: async ({ id }) => {

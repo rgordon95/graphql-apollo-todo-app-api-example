@@ -23,20 +23,21 @@ app.use(cors());
 // body parser middleware
 app.use(express.json());
 
-// const userLoader = new DataLoader(keys => loaders.user.batchUsers(keys)); // declare this way for cachings
 
 const apolloServer = new ApolloServer({
     typeDefs,
     resolvers,
-    context: async ( { req } ) =>  {
-        await verifyUser(req);
-        return {
-            email: req.email,
-            loggedInUserId: req.loggedInUserId,
-            loaders: {
-                user: new DataLoader(keys => loaders.user.batchUsers(keys))
-            }
+    context: async ( { req, connection } ) =>  {
+        const contextObj = {};
+        if (req) {
+            await verifyUser(req)
+            contextObj.email = req.email;
+            contextObj.loggedInUserId = req.loggedInUserId;
         }
+        contextObj.loaders = {
+            user: new DataLoader(keys => loaders.user.batchUsers(keys))
+        };
+        return contextObj;
     },
     formatError: (error) => {
         return {
@@ -53,7 +54,9 @@ app.use('/', (req, res, next) => {
     res.send({ message: 'hello' })
 })
 
-app.listen(PORT, () => {
+const httpServer = app.listen(PORT, () => {
     console.log(`Server listening on PORT: ${PORT}`)
     console.log(`GRAPHQL ENDPOINT: ${apolloServer.graphqlPath}`)
 });
+
+apolloServer.installSubscriptionHandlers(httpServer);
