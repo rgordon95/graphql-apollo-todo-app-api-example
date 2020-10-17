@@ -4,6 +4,7 @@ const User = require('../database/models/user');
 const uuid = require('uuid');
 const { isAuthenticated, isTaskOwner } = require('./middleware');
 const user = require('../database/models/user');
+const task = require('../database/models/task');
 
 module.exports = {
     Query: {
@@ -15,10 +16,24 @@ module.exports = {
                 throw error;
              }
             }),
-        tasks: combineResolvers(isAuthenticated, async (parent, { skip = 0, limit = 20 }, { loggedInUserId }, info) => {
+        tasks: combineResolvers(isAuthenticated, async (parent, { cursor, limit = 20 }, { loggedInUserId }, info) => {
             try {
-                const tasks = await Task.find({ user: loggedInUserId}).sort({ _id: -1 }).skip(skip).limit(limit);
-                return tasks;
+                const query = { user: loggedInUserId };
+                if (cursor) {
+                    query['_id'] = {
+                        '$lt': cursor
+                    }
+                };
+                let tasks = await Task.find(query).sort({ _id: -1 }).limit(limit + 1);
+                const hasNextPage = tasks.length > limit;
+                tasks = hasNextPage ? tasks.slice(0, -1) : tasks;
+                return {
+                    taskFeed: tasks,
+                    pageInfo: {
+                        nextPageCursor:  hasNextPage ? tasks[tasks.length - 1 ].id : null,
+                        hasNextPage, 
+                      }
+                    }
             } catch (error) {
                 console.log(error);
                 throw error
