@@ -23,7 +23,7 @@ app.use(cors());
 // body parser middleware
 app.use(express.json());
 
-const userLoader = new DataLoader(keys => loaders.user.batchUsers(keys));
+// const userLoader = new DataLoader(keys => loaders.user.batchUsers(keys)); // declare this way for cachings
 
 const apolloServer = new ApolloServer({
     typeDefs,
@@ -34,7 +34,7 @@ const apolloServer = new ApolloServer({
             email: req.email,
             loggedInUserId: req.loggedInUserId,
             loaders: {
-                user: userLoader,
+                user: new DataLoader(keys => loaders.user.batchUsers(keys))
             }
         }
     },
